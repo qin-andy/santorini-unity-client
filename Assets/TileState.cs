@@ -30,7 +30,9 @@ public class TileState : MonoBehaviour
             switch (board.selectionPhase)
             {
                 case "Selecting Worker":
-                    if (worker != null && worker.GetComponent<WorkerState>().playerColor == board.currentTurn)
+                    if (worker != null 
+                        && worker.GetComponent<WorkerState>().playerColor == board.playerColor
+                        && board.playerColor == board.currentTurn)
                     {
                         board.UnhighlightAll();
                         board.selectedWorkerTile = this;

@@ -59,7 +59,15 @@ public class SocketAdapter : MonoBehaviour
         }
         JsonElement type = root.GetProperty("type");
         JsonElement payload = root.GetProperty("payload");
-        if (type.GetString() == "placement update")
+        if (type.GetString() == "start success")
+        {
+            JsonElement players = payload.GetProperty("players");
+            string redPlayerId = players.GetProperty("red").GetString();
+            Debug.Log("Red player id: " + redPlayerId);
+            string playerColor = client.Id == redPlayerId ? "red" : "blue";
+            actionQueue.actionQueue.Enqueue(new CoordAction("game start", playerColor));
+        }
+        else if (type.GetString() == "placement update")
         {
             Vector2Int coord = CoordJsonToVector(payload.GetProperty("coord"));
             Vector2Int[] coords = new Vector2Int[1] { coord };

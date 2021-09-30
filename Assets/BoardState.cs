@@ -14,7 +14,6 @@ public class BoardState : MonoBehaviour
     public GameObject queueObject;
 
     public SocketAdapter adapter;
-    PlayerState player;
     MainThreadActionQueue actionQueue;
 
 
@@ -26,6 +25,7 @@ public class BoardState : MonoBehaviour
     public List<TileState> tiles;
 
     public bool running;
+    public string playerColor;
 
     public string gamePhase;
     public string selectionPhase;
@@ -66,7 +66,6 @@ public class BoardState : MonoBehaviour
 
     void HandleActionQueue()
     {
-
         if (actionQueue != null && actionQueue.actionQueue.Count > 0)
         {
             CoordAction action = actionQueue.actionQueue.Dequeue();
@@ -74,6 +73,10 @@ public class BoardState : MonoBehaviour
             Debug.Log("Action type: " + action.type);
             switch (action.type)
             {
+                case "game start":
+                    playerColor = action.extra;
+                    Debug.Log("Player color is " + playerColor);
+                    break;
                 case "place worker":
                     PlaceWorker(tiles[action.coords[0].x + action.coords[0].y * 5]);
                     break;
