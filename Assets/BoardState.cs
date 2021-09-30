@@ -14,8 +14,7 @@ public class BoardState : MonoBehaviour
     public GameObject queueObject;
 
     public SocketAdapter adapter;
-    MainThreadActionQueue actionQueue;
-
+    public MainThreadActionQueue actionQueue;
 
     public TileState selectedWorkerTile;
     public TileState selectedMoveTile;
@@ -31,6 +30,7 @@ public class BoardState : MonoBehaviour
     public string selectionPhase;
     public string currentTurn;
 
+    public GameObject currentHoveredObject;
 
     // Start is called before the first frame update
     void Start()
@@ -54,6 +54,7 @@ public class BoardState : MonoBehaviour
         adapter = socketAdapaterObject.GetComponent<SocketAdapter>();
         actionQueue = queueObject.GetComponent<MainThreadActionQueue>();
         Thread.CurrentThread.Name = "Main thread";
+        currentHoveredObject = gameObject; 
     }
 
     // Update is called once per frame
@@ -62,6 +63,7 @@ public class BoardState : MonoBehaviour
         PrimaryClick();
         SecondaryClick();
         HandleActionQueue();
+        MouseHover();
     }
 
     void HandleActionQueue()
@@ -198,7 +200,7 @@ public class BoardState : MonoBehaviour
 
     public void MakeMove(TileState workerTile, TileState moveTile, TileState buildTile)
     {
-        workerTile.worker.MoveModelToTile(moveTile);
+        workerTile.worker.SmoothMoveModelToTile(moveTile);
         workerTile.worker.MoveStateToTile(moveTile);
         buildTile.BuildBlock();
         UnhighlightAll();
@@ -226,6 +228,21 @@ public class BoardState : MonoBehaviour
         {
             GameObject clickedObject = GetMouseGameObject();
             clickedObject?.GetComponent<EventManager>()?.FireSecondaryClickEvent();
+        }
+    }
+
+    void MouseHover()
+    {
+        GameObject hoveredObject = GetMouseGameObject();
+        if (currentHoveredObject == null)
+        {
+            currentHoveredObject = hoveredObject;
+        }
+        else if (hoveredObject != currentHoveredObject)
+        {
+            currentHoveredObject?.GetComponent<EventManager>().FireMouseHoverLeave();
+            hoveredObject?.GetComponent<EventManager>().FireMouseHoverEnter();
+            currentHoveredObject = hoveredObject;
         }
     }
 

@@ -47,7 +47,7 @@ public class TileState : MonoBehaviour
                         board.selectedMoveTile = this;
                         board.selectionPhase = "Selecting Build Tile";
                         board.HighlightForBuildAdjacentTiles(this);
-                        board.selectedWorkerTile.worker.MoveModelToTile(this);
+                        board.selectedWorkerTile.worker.SmoothMoveModelToTile(this);
                     }
                     else
                     {
@@ -105,17 +105,27 @@ public class TileState : MonoBehaviour
         SelectTile();
     }
 
+    void OnHoverEnter(System.Object sender, EventArgs e)
+    {
+        GetComponent<Renderer>().material.SetColor("_Color", Color.gray);
+    }
+    void OnHoverLeave(System.Object sender, EventArgs e)
+    {
+        GetComponent<Renderer>().material.SetColor("_Color", defaultColor);
+    }
+
     public void BuildBlock()
     {
         if (elevation < 3)
         {
-            builder.BuildBlock();
             elevation += 1;
+            builder.BuildBlock(elevation);
+
         }
         else if (elevation == 3)
         {
-            builder.BuildCap();
             elevation += 1;
+            builder.BuildCap();
         }
     }
 
@@ -125,13 +135,9 @@ public class TileState : MonoBehaviour
         elevation = 0;
         builder = GetComponent<TileBlockBuilder>();
         GetComponent<EventManager>().OnPrimaryClicked += OnClicked;
+        GetComponent<EventManager>().OnMouseHoverEnter += OnHoverEnter;
+        GetComponent<EventManager>().OnMouseHoverLeave += OnHoverLeave;
+
         defaultColor = GetComponent<Renderer>().material.color;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
 }

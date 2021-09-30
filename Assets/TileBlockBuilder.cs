@@ -8,26 +8,20 @@ public class TileBlockBuilder : MonoBehaviour
     public GameObject block;
     public GameObject cap;
     public TileState tileState;
-    public float blockHeight;
     // Start is called before the first frame update
     void Start()
     {
-        blockHeight = block.transform.localScale.y;
         tileState = GetComponent<TileState>();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
-    public void BuildBlock()
+    public void BuildBlock(int level)
     {
         Debug.Log(tileState.coord);
         Vector3 destination = GetHighestPoint(transform.position);
-        destination += new Vector3(0, block.transform.localScale.y * 0.5f, 0);
-        GameObject newBlock = Instantiate(block, destination, gameObject.transform.rotation);
+        GameObject newBlock = Instantiate(block, Vector3.zero, gameObject.transform.rotation);
+        newBlock.transform.localScale = newBlock.transform.localScale * (float) Math.Pow(0.9, level);
+        destination += new Vector3(0, newBlock.transform.localScale.y * 0.5f, 0);
+        newBlock.transform.position = destination;
         newBlock.transform.parent = gameObject.transform;
     }
 

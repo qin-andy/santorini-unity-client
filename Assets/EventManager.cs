@@ -7,6 +7,8 @@ public class EventManager : MonoBehaviour
 {
     public event EventHandler OnPrimaryClicked;
     public event EventHandler OnSecondaryClicked;
+    public event EventHandler OnMouseHoverEnter;
+    public event EventHandler OnMouseHoverLeave;
 
     public void FirePrimaryClickEvent()
     {
@@ -17,14 +19,14 @@ public class EventManager : MonoBehaviour
     {
         OnSecondaryClicked?.Invoke(this, EventArgs.Empty);
     }
-    void Start()
+
+    public void FireMouseHoverEnter()
     {
-        
+        OnMouseHoverEnter?.Invoke(this, EventArgs.Empty);
     }
 
-    // Update is called once per frame
-    void Update()
+    public void FireMouseHoverLeave()
     {
-        
+        OnMouseHoverLeave?.Invoke(this, EventArgs.Empty);
     }
 }

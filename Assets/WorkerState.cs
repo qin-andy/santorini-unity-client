@@ -5,6 +5,9 @@ using UnityEngine;
 public class WorkerState : MonoBehaviour
 {
     public TileState currentTile;
+    public Vector3 origin;
+    public Vector3 dest;
+    public float progressTowardsDest;
     public string playerColor;
 
     public void MoveStateToTile(TileState targetTile)
@@ -21,8 +24,14 @@ public class WorkerState : MonoBehaviour
 
     public void MoveModelToTile(TileState targetTile)
     {
-        Debug.Log("Moving worker transform to " + targetTile.coord);
         transform.position = GetHighestPoint(targetTile.transform.position);
+    }
+
+    public void SmoothMoveModelToTile(TileState targetTile)
+    {
+        origin = transform.position;
+        dest = GetHighestPoint(targetTile.transform.position);
+        progressTowardsDest = 0;
     }
 
     public void MoveModelToParent()
@@ -34,13 +43,24 @@ public class WorkerState : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        progressTowardsDest = 2;
+        dest = Vector3.zero;
+        origin = Vector3.zero;
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if (progressTowardsDest < 1)
+        {
+            transform.position = Vector3.Lerp(origin, dest, progressTowardsDest);
+            progressTowardsDest += 0.01f;
+        } 
+        else if (progressTowardsDest >= 1)
+        {
+            progressTowardsDest = 2;
+            origin = transform.position;
+        }
     }
 
     public void SetColor(string color)
