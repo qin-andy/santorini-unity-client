@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
+using static MainThreadActionQueue;
 
 public class BoardState : MonoBehaviour
 {
@@ -9,9 +11,12 @@ public class BoardState : MonoBehaviour
     public GameObject tile;
     public GameObject worker;
     public GameObject socketAdapaterObject;
+    public GameObject queueObject;
 
     public SocketAdapter adapter;
-    public PlayerState player;
+    PlayerState player;
+    MainThreadActionQueue actionQueue;
+
 
     public TileState selectedWorkerTile;
     public TileState selectedMoveTile;
@@ -47,6 +52,8 @@ public class BoardState : MonoBehaviour
         gamePhase = "placement";
         currentTurn = "red";
         adapter = socketAdapaterObject.GetComponent<SocketAdapter>();
+        actionQueue = queueObject.GetComponent<MainThreadActionQueue>();
+        Thread.CurrentThread.Name = "Main thread";
     }
 
     // Update is called once per frame
@@ -54,6 +61,23 @@ public class BoardState : MonoBehaviour
     {
         PrimaryClick();
         SecondaryClick();
+        HandleActionQueue();
+    }
+
+    void HandleActionQueue()
+    {
+        if (actionQueue.actionQueue.Count > 0)
+        {
+            CoordAction action = actionQueue.actionQueue.Dequeue();
+            Debug.Log("Popping action queue on thread: " + Thread.CurrentThread.Name);
+            Debug.Log("Action type: " + action.type);
+            switch (action.type)
+            {
+                case "place worker":
+                    PlaceWorker(tiles[action.coords[0].x + action.coords[0].y * 5]);
+                    break;
+            }
+        }
     }
 
     public List<Vector2Int> GetAdjacentCoords(Vector2Int tilePosition)
@@ -134,6 +158,8 @@ public class BoardState : MonoBehaviour
 
     public void PlaceWorker(TileState targetTile)
     {
+        Thread t = Thread.CurrentThread;
+        Debug.Log("Running on thread: " + t.Name);
         switch (workers.Count)
         {
             case 0:

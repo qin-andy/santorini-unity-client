@@ -1,18 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.Json;
+using System.Threading;
 using SocketIOClient;
 using UnityEngine;
+using static MainThreadActionQueue;
 
 public class SocketAdapter : MonoBehaviour
 {
     // Start is called before the first frame update
     public GameObject boardObject;
+    public GameObject queueObject;
 
     SocketIO client;
     BoardState board;
+    MainThreadActionQueue actionQueue;
 
-    async void ConnectToServer()
+    void ConnectToServer()
     {
         Debug.Log("Socket Adapater starting...");
         client = new SocketIO("http://localhost:3001/");
@@ -24,6 +28,11 @@ public class SocketAdapter : MonoBehaviour
         {
             ParseGameUpdateJson(response.GetValue(0));
         });
+        AsyncConnect();
+    }
+
+    async void AsyncConnect()
+    {
         await client.ConnectAsync();
         await client.EmitAsync("manager action", "join queue");
     }
@@ -56,21 +65,26 @@ public class SocketAdapter : MonoBehaviour
             int x = coord.GetProperty("x").GetInt32();
             int y = coord.GetProperty("y").GetInt32();
             Debug.Log("received placement update at " + x + "," + y);
-            board.PlaceWorker(board.tiles[x + y * 5]);
+            /*board.PlaceWorker(board.tiles[x + y * 5]);*/
+            Vector2Int[] coords = new Vector2Int[1];
+            coords[0] = new Vector2Int(x, y);
+            Debug.Log("Dispatching action from thread: " + Thread.CurrentThread.Name);
+            actionQueue.actionQueue.Enqueue(new CoordAction("place worker", coords));
         }
     }
 
-    public async void SendPlacement(Vector2Int coord)
+    public void SendPlacement(Vector2Int coord)
     {
         string payloadString = "{\"coord\": {\"x\": " + coord.x + ", \"y\": " + coord.y + "}}";
 
         Debug.Log("Sending payload; " + payloadString);
-        await client.EmitAsync("game action", "santorini place", payloadString);
+        client.EmitAsync("game action", "santorini place", payloadString);
     }
 
     void Start()
     {
         board = boardObject.GetComponent<BoardState>();
+        actionQueue = queueObject.GetComponent<MainThreadActionQueue>();
         ConnectToServer();
     }
 
