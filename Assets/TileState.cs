@@ -56,7 +56,13 @@ public class TileState : MonoBehaviour
                 case "Selecting Build Tile":
                     if (highlightedForBuild)
                     {
-                        board.MakeMove(board.selectedWorkerTile, board.selectedMoveTile, this);
+                        // Send move to adapter
+                        Vector2Int[] coords = new Vector2Int[] {
+                            board.selectedWorkerTile.coord,
+                            board.selectedMoveTile.coord,
+                            this.coord,
+                        };
+                        board.adapter.SendMove(coords);
                     }
                     else
                     {

@@ -9,7 +9,7 @@ public class WorkerState : MonoBehaviour
 
     public void MoveStateToTile(TileState targetTile)
     {
-        Debug.Log("Moving worker to " + targetTile);
+        Debug.Log("Moving worker state to " + targetTile.coord);
         if (currentTile != null)
         {
             currentTile.worker = null;
@@ -21,6 +21,7 @@ public class WorkerState : MonoBehaviour
 
     public void MoveModelToTile(TileState targetTile)
     {
+        Debug.Log("Moving worker transform to " + targetTile.coord);
         transform.position = GetHighestPoint(targetTile.transform.position);
     }
 

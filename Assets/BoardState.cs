@@ -42,7 +42,7 @@ public class BoardState : MonoBehaviour
         }
         foreach (Vector2Int coord in coords)
         {
-            Vector3 position = new Vector3(coord.x - 2, 0, coord.y - 2);
+            Vector3 position = new Vector3(coord.x - 2, 0, 4 - coord.y - 2);
             GameObject newTile = Instantiate(tile, position, Quaternion.identity);
             newTile.GetComponent<TileState>().coord = coord;
             newTile.transform.parent = gameObject.transform;
@@ -66,7 +66,8 @@ public class BoardState : MonoBehaviour
 
     void HandleActionQueue()
     {
-        if (actionQueue.actionQueue.Count > 0)
+
+        if (actionQueue != null && actionQueue.actionQueue.Count > 0)
         {
             CoordAction action = actionQueue.actionQueue.Dequeue();
             Debug.Log("Popping action queue on thread: " + Thread.CurrentThread.Name);
@@ -75,6 +76,11 @@ public class BoardState : MonoBehaviour
             {
                 case "place worker":
                     PlaceWorker(tiles[action.coords[0].x + action.coords[0].y * 5]);
+                    break;
+                case "make move":
+                    MakeMove(tiles[action.coords[0].x + action.coords[0].y * 5],
+                            tiles[action.coords[1].x + action.coords[1].y * 5],
+                            tiles[action.coords[2].x + action.coords[2].y * 5]);
                     break;
             }
         }
@@ -189,6 +195,7 @@ public class BoardState : MonoBehaviour
 
     public void MakeMove(TileState workerTile, TileState moveTile, TileState buildTile)
     {
+        workerTile.worker.MoveModelToTile(moveTile);
         workerTile.worker.MoveStateToTile(moveTile);
         buildTile.BuildBlock();
         UnhighlightAll();

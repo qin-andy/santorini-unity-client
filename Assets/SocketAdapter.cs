@@ -61,26 +61,61 @@ public class SocketAdapter : MonoBehaviour
         JsonElement payload = root.GetProperty("payload");
         if (type.GetString() == "placement update")
         {
-            JsonElement coord = payload.GetProperty("coord");
-            int x = coord.GetProperty("x").GetInt32();
-            int y = coord.GetProperty("y").GetInt32();
-            Debug.Log("received placement update at " + x + "," + y);
-            /*board.PlaceWorker(board.tiles[x + y * 5]);*/
-            Vector2Int[] coords = new Vector2Int[1];
-            coords[0] = new Vector2Int(x, y);
+            Vector2Int coord = CoordJsonToVector(payload.GetProperty("coord"));
+            Vector2Int[] coords = new Vector2Int[1] { coord };
             Debug.Log("Dispatching action from thread: " + Thread.CurrentThread.Name);
             actionQueue.actionQueue.Enqueue(new CoordAction("place worker", coords));
+        }
+        else if (type.GetString() == "santorini move")
+        {
+            JsonElement moves = payload.GetProperty("move");
+            JsonElement workerCoordElement = moves.GetProperty("workerCoord");
+            JsonElement moveCoordElement = moves.GetProperty("moveCoord");
+            JsonElement buildCoordElement = moves.GetProperty("buildCoord");
+
+            Vector2Int workerCoord = CoordJsonToVector(workerCoordElement);
+            Vector2Int moveCoord = CoordJsonToVector(moveCoordElement);
+            Vector2Int buildCoord = CoordJsonToVector(buildCoordElement);
+            actionQueue.actionQueue.Enqueue(new CoordAction("make move", new Vector2Int[]
+            {
+                workerCoord,
+                moveCoord,
+                buildCoord
+            }));
         }
     }
 
     public void SendPlacement(Vector2Int coord)
     {
-        string payloadString = "{\"coord\": {\"x\": " + coord.x + ", \"y\": " + coord.y + "}}";
-
+        string coordJson = VectorToCoordJson(coord);
+        string payloadString = "{\"coord\": " + coordJson + "}";
         Debug.Log("Sending payload; " + payloadString);
         client.EmitAsync("game action", "santorini place", payloadString);
     }
 
+    public void SendMove(Vector2Int[] coords) // worker, move, and build coords at 0, 1, 2
+    {
+        string workerCoord = VectorToCoordJson(coords[0]);
+        string moveCoord = VectorToCoordJson(coords[1]);
+        string buildCoord = VectorToCoordJson(coords[2]);
+        string payloadString = "{\"workerCoord\": " + workerCoord + "," +
+                                "\"moveCoord\": " + moveCoord + "," +
+                                "\"buildCoord\": " + buildCoord + "}";
+        client.EmitAsync("game action", "santorini move", payloadString);
+    }
+    
+    public string VectorToCoordJson(Vector2Int coord)
+    {
+        string payloadString = "{\"x\": " + coord.x + ", \"y\": " + coord.y + "}";
+        return payloadString;
+    }
+
+    public Vector2Int CoordJsonToVector(JsonElement coord)
+    {
+        int x = coord.GetProperty("x").GetInt32();
+        int y = coord.GetProperty("y").GetInt32();
+        return new Vector2Int(x, y);
+    }
     void Start()
     {
         board = boardObject.GetComponent<BoardState>();
