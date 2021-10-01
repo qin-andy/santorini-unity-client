@@ -11,6 +11,7 @@ public class TileState : MonoBehaviour
 
     public bool highlightedForMove;
     public bool highlightedForBuild;
+    public Color previousColor;
     public Color defaultColor;
     
     public TileBlockBuilder builder;
@@ -22,8 +23,8 @@ public class TileState : MonoBehaviour
     {
         if (board.gamePhase == "placement")
         {
-            /*board.PlaceWorker(this);*/
-            board.adapter.SendPlacement(coord);
+            board.PlaceWorker(this);
+            /*board.adapter.SendPlacement(coord);*/
         }
         else if (board.gamePhase == "build")
         {
@@ -31,8 +32,9 @@ public class TileState : MonoBehaviour
             {
                 case "Selecting Worker":
                     if (worker != null 
-                        && worker.GetComponent<WorkerState>().playerColor == board.playerColor
-                        && board.playerColor == board.currentTurn)
+                        /*&& worker.GetComponent<WorkerState>().playerColor == board.playerColor
+                        && board.playerColor == board.currentTurn*/
+                        )
                     {
                         board.UnhighlightAll();
                         board.selectedWorkerTile = this;
@@ -59,12 +61,14 @@ public class TileState : MonoBehaviour
                     if (highlightedForBuild)
                     {
                         // Send move to adapter
-                        Vector2Int[] coords = new Vector2Int[] {
-                            board.selectedWorkerTile.coord,
-                            board.selectedMoveTile.coord,
-                            this.coord,
-                        };
-                        board.adapter.SendMove(coords);
+                        /*                        Vector2Int[] coords = new Vector2Int[] {
+                                                    board.selectedWorkerTile.coord,
+                                                    board.selectedMoveTile.coord,
+                                                    this.coord,
+                                                };
+                                                board.adapter.SendMove(coords);*/
+                        //
+                        board.MakeMove(board.selectedWorkerTile, board.selectedMoveTile, this);
                     }
                     else
                     {
@@ -107,11 +111,12 @@ public class TileState : MonoBehaviour
 
     void OnHoverEnter(System.Object sender, EventArgs e)
     {
+        previousColor = GetComponent<Renderer>().material.color;
         GetComponent<Renderer>().material.SetColor("_Color", Color.gray);
     }
     void OnHoverLeave(System.Object sender, EventArgs e)
     {
-        GetComponent<Renderer>().material.SetColor("_Color", defaultColor);
+        GetComponent<Renderer>().material.SetColor("_Color", previousColor);
     }
 
     public void BuildBlock()
@@ -139,5 +144,6 @@ public class TileState : MonoBehaviour
         GetComponent<EventManager>().OnMouseHoverLeave += OnHoverLeave;
 
         defaultColor = GetComponent<Renderer>().material.color;
+        previousColor = defaultColor;
     }
 }

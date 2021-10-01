@@ -7,10 +7,12 @@ public class WorkerState : MonoBehaviour
     public TileState currentTile;
     public Vector3 origin;
     public Vector3 dest;
-    public float progressTowardsDest;
     public string playerColor;
 
-    public void MoveStateToTile(TileState targetTile)
+    float[] posBeziers;
+    float[] negBeziers;
+
+public void MoveStateToTile(TileState targetTile)
     {
         Debug.Log("Moving worker state to " + targetTile.coord);
         if (currentTile != null)
@@ -24,43 +26,46 @@ public class WorkerState : MonoBehaviour
 
     public void MoveModelToTile(TileState targetTile)
     {
-        transform.position = GetHighestPoint(targetTile.transform.position);
+        transform.position = GetHighestPoint(targetTile.transform.position) + new Vector3(0, transform.localScale.y * 0.5f, 0);
     }
 
     public void SmoothMoveModelToTile(TileState targetTile)
     {
         origin = transform.position;
-        dest = GetHighestPoint(targetTile.transform.position);
-        progressTowardsDest = 0;
+        dest = GetHighestPoint(targetTile.transform.position) + new Vector3(0, transform.localScale.y * 0.5f, 0);
+        StartCoroutine("SmoothMoveCoroutine");
     }
 
     public void MoveModelToParent()
     {
-        MoveModelToTile(currentTile);
+        SmoothMoveModelToTile(currentTile);
     }
 
+    IEnumerator SmoothMoveCoroutine()
+    {
+        for (float f = 0; f < 1; f += 0.017f)
+        {
+            Vector2 horizontal = Vector2.Lerp(new Vector2(origin.x, origin.z), new Vector2(dest.x, dest.z), f);
+            float distance = Vector2.Distance(new Vector2(origin.x, origin.z), new Vector2(dest.x, dest.z));
+            float vertical = 1.7f * distance * f * (distance - distance * f) + origin.y + (dest.y - origin.y) * f;
+            transform.position = new Vector3(horizontal.x, vertical, horizontal.y);
+            yield return null;
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
     {
-        progressTowardsDest = 2;
         dest = Vector3.zero;
         origin = Vector3.zero;
+        posBeziers = new float[] { 0.0f, 1.5f, 1.5f, 1.0f };
+        negBeziers = new float[] { 0.0f, -1.5f, -1.5f, 1.0f };
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (progressTowardsDest < 1)
-        {
-            transform.position = Vector3.Lerp(origin, dest, progressTowardsDest);
-            progressTowardsDest += 0.01f;
-        } 
-        else if (progressTowardsDest >= 1)
-        {
-            progressTowardsDest = 2;
-            origin = transform.position;
-        }
+
     }
 
     public void SetColor(string color)

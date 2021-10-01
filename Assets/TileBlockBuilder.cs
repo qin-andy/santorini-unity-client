@@ -16,13 +16,34 @@ public class TileBlockBuilder : MonoBehaviour
 
     public void BuildBlock(int level)
     {
-        Debug.Log(tileState.coord);
-        Vector3 destination = GetHighestPoint(transform.position);
         GameObject newBlock = Instantiate(block, Vector3.zero, gameObject.transform.rotation);
-        newBlock.transform.localScale = newBlock.transform.localScale * (float) Math.Pow(0.9, level);
-        destination += new Vector3(0, newBlock.transform.localScale.y * 0.5f, 0);
-        newBlock.transform.position = destination;
+        newBlock.transform.localScale = newBlock.transform.localScale * (float)Math.Pow(0.9, level);
         newBlock.transform.parent = gameObject.transform;
+        StartCoroutine("SmoothBuildCoroutine", newBlock);
+    }
+
+    IEnumerator SmoothBuildCoroutine(GameObject block)
+    {
+        Vector3 destination = GetHighestPoint(transform.position);
+
+        destination += new Vector3(0, block.transform.localScale.y * 0.5f, 0);
+        Vector3 origin = destination + new Vector3(0, 1, 0);
+        block.transform.position = origin;
+
+        Renderer blockRenderer = block.GetComponent<Renderer>();
+        Color c = blockRenderer.material.color;
+        c.a = 0;
+        blockRenderer.material.color = c;
+
+
+        for (float f = 0; f < 1; f += 0.02f)
+        {
+            block.transform.position = Vector3.Lerp(origin, destination, f);
+            Color c2 = blockRenderer.material.color;
+            c2.a = f;
+            blockRenderer.material.color = c2;
+            yield return null;
+        }
     }
 
     public void BuildCap()
